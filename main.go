@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
+	"github.com/MarcinSzymanek/miWeatherGoApi/wfetch"
 	"github.com/gin-gonic/gin"
 )
 
@@ -23,7 +25,8 @@ var albums = []album{
 func main() {
 	router := gin.Default()
 	router.GET("/albums", getAlbums)
-
+	reply := wfetch.FetchHourlyForecast(24.22, 40.13, 5)
+	fmt.Println(reply)
 	router.Run("localhost:8082")
 }
 

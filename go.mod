@@ -2,7 +2,12 @@ module github.com/MarcinSzymanek/miWeatherGoApi
 
 go 1.24.0
 
-require github.com/gin-gonic/gin v1.10.0
+require (
+	github.com/MarcinSzymanek/miWeatherGoApi/wfetch v0.0.0-00010101000000-000000000000
+	github.com/gin-gonic/gin v1.10.0
+)
+
+replace github.com/MarcinSzymanek/miWeatherGoApi/wfetch => ./wfetch
 
 require (
 	github.com/bytedance/sonic v1.11.6 // indirect
