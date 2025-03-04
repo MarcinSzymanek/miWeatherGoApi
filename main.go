@@ -8,28 +8,96 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type album struct {
-	ID     string  `json:"id"`
-	Title  string  `json:"title"`
-	Artist string  `json:"artist"`
-	Price  float64 `json:"price"`
+type HourlyQueryParam struct {
+	Lat   float64 `form:"lat" binding:"required"`
+	Lon   float64 `form:"lon" binding:"required"`
+	Count int     `form:"hours"`
 }
 
-// Replace with http call to openmeteo
-var albums = []album{
-	{ID: "1", Title: "Blue Train", Artist: "John Coltrane", Price: 56.99},
-	{ID: "2", Title: "Jeru", Artist: "Gerry Mulligan", Price: 17.99},
-	{ID: "3", Title: "Sarah Vaughan and Clifford Brown", Artist: "Sarah Vaughan", Price: 39.99},
-}
-
+// If a user does not enter a float as lat and lon queries, return status 422
 func main() {
 	router := gin.Default()
-	router.GET("/albums", getAlbums)
-	reply := wfetch.FetchHourlyForecast(24.22, 40.13, 5)
-	fmt.Println(reply)
+	router.GET("/WeatherForecast/hourly", func(c *gin.Context) {
+		var queryParams HourlyQueryParam
+		if err := c.ShouldBind(&queryParams); err == nil {
+			if queryParams.Count <= 0 {
+				queryParams.Count = 5
+			}
+			results, err := getHourlyWeather(queryParams.Lat, queryParams.Lon, queryParams.Count)
+			if err != nil {
+				// If we get this far, something's wrong with OM http request or conversion
+				fmt.Println(err.Error())
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not get weather data"})
+			}
+			c.JSON(http.StatusOK, results)
+		} else {
+			c.JSON(http.StatusUnprocessableEntity, gin.H{"Parameter error": "Incorrect query parameters (lat, lon)"})
+		}
+
+	})
 	router.Run("localhost:8082")
 }
 
-func getAlbums(c *gin.Context) {
-	c.JSON(http.StatusOK, albums)
+// Fetch open-meteo weather data, then convert it to []WeatherDataModel
+func getHourlyWeather(lat float64, lon float64, count int) ([]WeatherDataModel, error) {
+	fmt.Println("Received Get Forecast request")
+	reply, err := wfetch.FetchHourlyForecast(lat, lon, count)
+	if err != nil {
+		fmt.Println("Error fetching hourly forecast")
+		fmt.Println(err.Error())
+		return []WeatherDataModel{}, err
+	}
+
+	results := make([]WeatherDataModel, count)
+
+	for i := 0; i < count; i++ {
+		results[i].Humidity = reply.Humidity[i]
+		results[i].Temperature = int(reply.Temperature[i])
+		results[i].WindData.Direction = reply.WindDirection[i]
+		results[i].WindData.Speed = reply.WindSpeed[i]
+		results[i].WindData.SpeedUnit = "m/s"
+		results[i].Time = reply.CTime[i].Time
+		results[i].Description = wmoCodeToDescription(reply.WMO[i])
+	}
+
+	return results, nil
+}
+
+// For a full list of WMO code weather descriptions see https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM
+func wmoCodeToDescription(wmo int) string {
+	switch {
+	case wmo >= 0 && wmo < 2:
+		return "Clear Sky"
+	case wmo >= 2 && wmo < 4:
+		return "Partly Cloudy"
+	case wmo == 45 || wmo == 48:
+		return "Foggy"
+	case wmo == 51 || wmo == 53 || wmo == 55:
+		return "Drizzle"
+	case wmo == 56 || wmo == 57:
+		return "Freezing Drizzle"
+	case wmo == 61:
+		return "Light Rain"
+	case wmo == 63:
+		return "Moderate Rain"
+	case wmo == 65:
+		return "Heavy Rain"
+	case wmo >= 66 && wmo < 60:
+		return "Freezing rain"
+	case wmo == 71:
+		return "Light Snow"
+	case wmo == 73:
+		return "Moderate Snow"
+	case wmo == 75:
+		return "Heavy Snow"
+	case wmo == 77:
+		return "Snow Grains"
+	case wmo >= 80 && wmo < 83:
+		return "Rain Showers"
+	case wmo >= 85 && wmo < 87:
+		return "Snow Showers"
+	case wmo >= 95 && wmo < 100:
+		return "Thunderstorm"
+	}
+	return "Unknown, wmo code: " + string(wmo)
 }
