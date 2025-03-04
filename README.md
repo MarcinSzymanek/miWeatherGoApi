@@ -12,38 +12,6 @@ Params:
 lat: Latitude (float, required)
 lon: Longitude (float, required)
 hours: Number of hours for the forecast (int, optional, default = 5)
-
-Example:
-
-http://localhost:8082/WeatherForecast/hourly?lat=56.16&lon=10.20&hours=3
-
-[
-  {
-    "Time": "2025-03-04T20:00:00Z",
-    "Humidity": 89,
-    "Description": "Partly Cloudy",
-    "WindData": {
-      "Direction": 255,
-      "Speed": 10.89,
-      "SpeedUnit": "m/s",
-      "Description": ""
-    },
-    "Temperature": 6
-  },
-  {
-    "Time": "2025-03-04T21:00:00Z",
-    "Humidity": 85,
-    "Description": "Partly Cloudy",
-    "WindData": {
-      "Direction": 249,
-      "Speed": 10.83,
-      "SpeedUnit": "m/s",
-      "Description": ""
-    },
-    "Temperature": 6
-  }
-]
-
 ```
 
 ### Weather Forecast Data JSON
