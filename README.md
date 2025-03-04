@@ -64,3 +64,9 @@ http://localhost:8082/WeatherForecast/hourly?lat=56.16&lon=10.20&hours=3
 - Current Weather `WeatherForecast/current?lat?lon`
 - Daily Forecast `WeatherForecast/daily?lat?lon?days`
 
+### Want to try it?
+
+1. Install Go
+2. Navigate to repo dir
+3. `go run . `
+
