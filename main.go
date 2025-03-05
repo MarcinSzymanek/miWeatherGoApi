@@ -8,6 +8,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type CurrentQueryParam struct {
+	Lat float64 `form:"lat" binding:"required"`
+	Lon float64 `form:"lon" binding:"required"`
+}
+
 type HourlyQueryParam struct {
 	Lat   float64 `form:"lat" binding:"required"`
 	Lon   float64 `form:"lon" binding:"required"`
@@ -17,6 +22,22 @@ type HourlyQueryParam struct {
 // If a user does not enter a float as lat and lon queries, return status 422
 func main() {
 	router := gin.Default()
+
+	router.GET("/WeatherForecast/current", func(c *gin.Context) {
+		var queryParams CurrentQueryParam
+		if err := c.ShouldBind(&queryParams); err == nil {
+			result, err := getCurrentWeather(queryParams.Lat, queryParams.Lon)
+			if err != nil {
+				fmt.Println(err.Error())
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not get weather data"})
+				return
+			}
+			c.JSON(http.StatusOK, result)
+		} else {
+			c.JSON(http.StatusUnprocessableEntity, gin.H{"Parameter error": "Incorrect query parameters (lat, lon)"})
+		}
+	})
+
 	router.GET("/WeatherForecast/hourly", func(c *gin.Context) {
 		var queryParams HourlyQueryParam
 		if err := c.ShouldBind(&queryParams); err == nil {
@@ -28,14 +49,34 @@ func main() {
 				// If we get this far, something's wrong with OM http request or conversion
 				fmt.Println(err.Error())
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not get weather data"})
+				return
 			}
 			c.JSON(http.StatusOK, results)
 		} else {
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"Parameter error": "Incorrect query parameters (lat, lon)"})
 		}
-
 	})
 	router.Run("localhost:8082")
+}
+
+func getCurrentWeather(lat float64, lon float64) (WeatherDataModel, error) {
+	fmt.Println("Received Get Current request")
+	reply, err := wfetch.FetchCurrentForecast(lat, lon)
+	if err != nil {
+		fmt.Println("Error fetching current forecast")
+		return WeatherDataModel{}, err
+	}
+
+	var result WeatherDataModel
+	result.Description = wmoCodeToDescription(reply.WMO)
+	result.Temperature = int(reply.Temperature)
+	result.Humidity = reply.Humidity
+	result.WindData.Direction = reply.WindDirection
+	result.WindData.Speed = reply.WindSpeed
+	result.WindData.SpeedUnit = "m/s"
+	result.Time = reply.CTime.Time
+
+	return result, nil
 }
 
 // Fetch open-meteo weather data, then convert it to []WeatherDataModel
