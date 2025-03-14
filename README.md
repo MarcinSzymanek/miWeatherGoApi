@@ -22,7 +22,7 @@ lon: Longitude (float, required)
 Params:
 lat: Latitude (float, required)
 lon: Longitude (float, required)
-hours: Number of hours for the forecast (int, optional, default = 5)
+count: Number of hours for the forecast (int, optional, default = 5)
 ```
 
 ### Weather Forecast Data JSON
@@ -69,6 +69,50 @@ http://localhost:8082/WeatherForecast/hourly?lat=56.16&lon=10.20&hours=3
   }
 ]
 ```
+
+### Daily forecast:
+
+```
+/WeatherForecast/daily
+
+Params:
+lat: Latitude (float, required)
+lon: Longitude (float, required)
+count: Number of days for the forecast (int, optional, default = 5)
+```
+
+### Daily Forecast Data JSON
+- Date: Date of the forecast in **[RFC3339](https://www.rfc-editor.org/rfc/rfc3339.html)** format with zero Z offset (GMT +0). The time suffix can be ignored.
+- TemperatureMin: Minimum daily temperature in Celsius
+- TemperatureMax: Maximum daily temperature in Celsius
+- Description: Weather data description following the **[WMO code descriptions](https://open-meteo.com/en/docs#weather_variable_documentation)**. Only the ones specified in open-meteo api description are used.
+
+Example:
+```
+http://localhost:8082/WeatherForecast/hourly?lat=56.16&lon=10.20&hours=3
+
+[
+  {
+    "Date": "2025-03-14T00:00:00Z",
+    "TemperatureMax": 4,
+    "TemperatureMin": 0,
+    "Description": "Drizzle"
+  },
+  {
+    "Date": "2025-03-15T00:00:00Z",
+    "TemperatureMax": 8,
+    "TemperatureMin": -1,
+    "Description": "Clear Sky"
+  },
+  {
+    "Date": "2025-03-16T00:00:00Z",
+    "TemperatureMax": 8,
+    "TemperatureMin": 1,
+    "Description": "Partly Cloudy"
+  }
+]
+```
+
 
 ### Want to try it?
 
