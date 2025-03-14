@@ -16,7 +16,7 @@ type CurrentQueryParam struct {
 type HourlyQueryParam struct {
 	Lat   float64 `form:"lat" binding:"required"`
 	Lon   float64 `form:"lon" binding:"required"`
-	Count int     `form:"hours"`
+	Count int     `form:"count"`
 }
 
 // If a user does not enter a float as lat and lon queries, return status 422
@@ -56,6 +56,25 @@ func main() {
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"Parameter error": "Incorrect query parameters (lat, lon)"})
 		}
 	})
+
+	router.GET("/WeatherForecast/daily", func(c *gin.Context) {
+		var queryParams HourlyQueryParam
+		if err := c.ShouldBind(&queryParams); err == nil {
+			if queryParams.Count <= 0 {
+				queryParams.Count = 5
+			}
+			results, err := getDailyWeather(queryParams.Lat, queryParams.Lon, queryParams.Count)
+			if err != nil {
+				// If we get this far, something's wrong with OM http request or conversion
+				fmt.Println(err.Error())
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not get weather data"})
+				return
+			}
+			c.JSON(http.StatusOK, results)
+		} else {
+			c.JSON(http.StatusUnprocessableEntity, gin.H{"Parameter error": "Incorrect query parameters (lat, lon)"})
+		}
+	})
 	router.Run("localhost:8082")
 }
 
@@ -81,7 +100,7 @@ func getCurrentWeather(lat float64, lon float64) (WeatherDataModel, error) {
 
 // Fetch open-meteo weather data, then convert it to []WeatherDataModel
 func getHourlyWeather(lat float64, lon float64, count int) ([]WeatherDataModel, error) {
-	fmt.Println("Received Get Forecast request")
+	fmt.Println("Received get hourly request")
 	reply, err := wfetch.FetchHourlyForecast(lat, lon, count)
 	if err != nil {
 		fmt.Println("Error fetching hourly forecast")
@@ -98,6 +117,27 @@ func getHourlyWeather(lat float64, lon float64, count int) ([]WeatherDataModel, 
 		results[i].WindData.Speed = reply.WindSpeed[i]
 		results[i].WindData.SpeedUnit = "m/s"
 		results[i].Time = reply.CTime[i].Time
+		results[i].Description = wmoCodeToDescription(reply.WMO[i])
+	}
+
+	return results, nil
+}
+
+func getDailyWeather(lat float64, lon float64, count int) ([]WeatherDataDailyModel, error) {
+	fmt.Println("Received get daily request")
+	reply, err := wfetch.FetchDailyForecast(lat, lon, count)
+	if err != nil {
+		fmt.Println("Error fetching daily forecast")
+		fmt.Println(err.Error())
+		return []WeatherDataDailyModel{}, err
+	}
+
+	results := make([]WeatherDataDailyModel, count)
+
+	for i := 0; i < count; i++ {
+		results[i].Date = reply.Date[i].Time
+		results[i].TemperatureMax = int(reply.TemperatureMax[i])
+		results[i].TemperatureMin = int(reply.TemperatureMin[i])
 		results[i].Description = wmoCodeToDescription(reply.WMO[i])
 	}
 

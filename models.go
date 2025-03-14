@@ -5,11 +5,18 @@ import (
 )
 
 type WeatherDataModel struct {
-	Time        time.Time `json:`
-	Humidity    int       `json`
+	Time        time.Time
+	Humidity    int
 	Description string
 	WindData    WindData
-	Temperature int `json:`
+	Temperature int
+}
+
+type WeatherDataDailyModel struct {
+	Date           time.Time
+	TemperatureMax int
+	TemperatureMin int
+	Description    string
 }
 
 type WindData struct {
