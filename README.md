@@ -70,13 +70,11 @@ http://localhost:8082/WeatherForecast/hourly?lat=56.16&lon=10.20&hours=3
 ]
 ```
 
-## Planned Endpoints
-
-- Daily Forecast `WeatherForecast/daily?lat?lon?days`
-
 ### Want to try it?
 
 1. Install Go
-2. Navigate to repo dir
+2. Navigate to repo dir in a terminal program
 3. `go run . `
+4. The api now runs at "http://localhost:8082"
+5. You can try it by navigating to "http://localhost:8082/WeatherForecast/hourly?lat=56.16&lon=10.20" in a browser, or running it in curl tool.
 
