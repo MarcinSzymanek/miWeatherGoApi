@@ -2,9 +2,20 @@
 
 This simple API fetches weather data from open-meteo API and converts the data into a format usable by MiWeather app. Unless otherwise specified all data is supposedly measured at 80m above sea level. Returned data is a list containing one or more JSON objects.
 
-### Endpoints
+## Endpoints
 
-Hourly forecast:
+### Current forecast
+
+```
+/WeatherForecast/current
+
+Params:
+lat: Latitude (float, required)
+lon: Longitude (float, required)
+```
+
+
+### Hourly forecast:
 ```
 /WeatherForecast/hourly
 
@@ -61,7 +72,6 @@ http://localhost:8082/WeatherForecast/hourly?lat=56.16&lon=10.20&hours=3
 
 ## Planned Endpoints
 
-- Current Weather `WeatherForecast/current?lat?lon`
 - Daily Forecast `WeatherForecast/daily?lat?lon?days`
 
 ### Want to try it?
